@@ -8,13 +8,14 @@ import { IoMdHeartEmpty } from "react-icons/io";
 import { BsCart } from "react-icons/bs";
 import { BiMenuAltRight } from "react-icons/bi";
 import { VscChromeClose } from "react-icons/vsc";
+import { fetchDataFromApi } from "@/utils/api";
 
 const Header = () => {
   const [mobileMenu, setMobileMenu] = useState(false);
   const [showCatMenu, setShowCatMenu] = useState(false);
   const [Show, setShow] = useState("translate-y-0");
   const [lastScrollY, SetLastScrollY] = useState(0);
-
+  const [categories, setCategories] = useState(null);
 
   // Hide and unhide navbar effect // start from Here//
   const controlNavbar = () => {
@@ -38,6 +39,16 @@ const Header = () => {
   });
   // Hide and unhide navbar effect // End  Here//
 
+  // fetch data for categories
+
+  useEffect(() => {
+    fetchcategories();
+  }, []);
+
+  const fetchcategories = async () => {
+    const { data } = await fetchDataFromApi(`/api/categories?populate=*`);
+    setCategories(data);
+  };
 
   return (
     <header
@@ -47,12 +58,17 @@ const Header = () => {
         <Link href="/">
           <img src="logo.svg" alt="logo" className="w-[40px] md:w-[60px]" />
         </Link>
-        <Menu showCatMenu={showCatMenu} setShowCatMenu={setShowCatMenu} />
+        <Menu
+          showCatMenu={showCatMenu}
+          setShowCatMenu={setShowCatMenu}
+          categories={categories}
+        />
         {mobileMenu && (
           <MenuMobile
             showCatMenu={showCatMenu}
             setShowCatMenu={setShowCatMenu}
             setMobileMenu={setMobileMenu}
+            categories={categories}
           />
         )}
 
@@ -65,15 +81,17 @@ const Header = () => {
             </div>
           </div>
           {/* icon end */}
-          <div className="w-8 md:w-12 h-8 md:h-12 rounded-full flex justify-center items-center hover:bg-black/[0.05] cursor-pointer relative">
-            <BsCart className="text-[19px] md:text-[25px] " />
-            <div className="h-[14px] md:h-[18px] min-w-[18px] rounded-full bg-red-600 absolute top-1 left-5 md:left-7 text-white text-[10px] md:text-[12px] flex justify-center items-center px-[2px] md:px-[5px]">
-              51
+          <Link href="/cart">
+            <div className="w-8 md:w-12 h-8 md:h-12 rounded-full flex justify-center items-center hover:bg-black/[0.05] cursor-pointer relative">
+              <BsCart className="text-[19px] md:text-[25px] " />
+              <div className="h-[14px] md:h-[18px] min-w-[18px] rounded-full bg-red-600 absolute top-1 left-5 md:left-7 text-white text-[10px] md:text-[12px] flex justify-center items-center px-[2px] md:px-[5px]">
+                51
+              </div>
             </div>
-          </div>
+          </Link>
           {/* icon end */}
           {/* mobile menu */}
-          <div className="w-8 md:w-12 h-8 md:h-12 rounded-full flex justify-center items-center hover:bg-black/[0.05] cursor-pointer relative -mr-2`">
+          <div className="w-8 md:w-12 h-8 md:h-12 rounded-full flex  md:hidden justify-center items-center hover:bg-black/[0.05] cursor-pointer relative -mr-2`">
             {mobileMenu ? (
               <VscChromeClose
                 className="text-[16px]"
