@@ -1,39 +1,74 @@
 import ProductDeatilsCarousel from "@/components/ProductDeatilsCarousel";
 import RelatedProduct from "@/components/RelatedProduct";
 import Wrapper from "@/components/Wrapper";
-import React from "react";
+import { addToCart } from "@/store/cardSlice";
+import { fetchDataFromApi } from "@/utils/api";
+import { getDiscountPrice } from "@/utils/helper";
+import React, { useState } from "react";
 import { IoMdHeartEmpty } from "react-icons/io";
+import { useSelector, useDispatch } from "react-redux";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
-const Productdetails = () => {
+const Productdetails = ({ product, products }) => {
+  const [selectedSize, setSelectedSize] = useState();
+  const [showError, setShowError] = useState(false);
+  const dispatch = useDispatch();
+  const p = product?.data?.[0]?.attributes;
+
+  const nofify =()=>{
+    toast.success('success , check your Cart', {
+      position: "bottom-right",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "colored",
+      });
+  }
+
   return (
     <div className="w-full md:py-20">
+      <ToastContainer/>
       <Wrapper>
         <div className="flex flex-col lg:flex-row md:px-10 gap-[50px] lg:gap-[100px]">
           {/* Left column start */}
           <div className="w-full md:w-auto flex-[1.5] max-w-[500px] lg:max-w-full mx-auto lg:mx-0">
-            <ProductDeatilsCarousel />
+            <ProductDeatilsCarousel images={p.image.data} />
           </div>
           {/* Left column End */}
 
           {/* Right column start */}
           <div className="flex-[1] py-3">
             {/* Product Title */}
-            <div className="text-[34px] font-semibold mb-2">
-              Jordan Retro 6 G
-            </div>
+            <div className="text-[34px] font-semibold mb-2 leading-tight">{p.name}</div>
 
             {/* Product SubTitle */}
             <div className="text-lg font-semibold mb-5">
-              Men&apos;s Golf Shoes
+              {product?.data?.[0]?.attributes?.subtitle}
             </div>
 
             {/*Product Price  */}
-            <div className="text-lg font-semibold">MRP: $19695.00</div>
-            <div className="text-md: font-mediumi text-black/[0.5]">
-              Incl.of taxes
-            </div>
-            <div className="text-md font-medium text-black/[0.5] mb-20">
-              {`(also includes all application duties)`}
+            <div>
+              <div className="p-3 text-black/[0.9]">
+                <h2 className="text-lg font-medium">{p.name}</h2>
+                <div className="flex items-center text-black/[0.5]">
+                  <p className="mr-2 text-lg font-semibold">&#8377;{p.price}</p>
+
+                  {p.orignal_price && (
+                    <>
+                      <p className="text-base  font-medium line-through">
+                        &#8377;{p.orignal_price}
+                      </p>
+                      <p className="ml-auto text-base font-medium text-green-500">
+                        {getDiscountPrice(p.orignal_price, p.price)} %off
+                      </p>
+                    </>
+                  )}
+                </div>
+              </div>
             </div>
 
             {/* Product Size range start */}
@@ -49,37 +84,50 @@ const Productdetails = () => {
             {/* Heading End */}
 
             {/* Size Start */}
-            <div className="grid grid-cols-3 gap-2">
-              <div className="border rounded-md text-center py-3 font-medium hover:border-black cursor-pointer">
-                Uk - 6
-              </div>
-              <div className="border rounded-md text-center py-3 font-medium hover:border-black cursor-pointer">
-                Uk - 6
-              </div>
-              <div className="border rounded-md text-center py-3 font-medium hover:border-black cursor-pointer">
-                Uk - 6
-              </div>
-              <div className="border rounded-md text-center py-3 font-medium hover:border-black cursor-pointer">
-                Uk - 6
-              </div>
-              <div className="border rounded-md text-center py-3 font-medium hover:border-black cursor-pointer">
-                Uk - 6
-              </div>
-              <div className="border rounded-md text-center py-3 font-medium hover:border-black cursor-pointer">
-                Uk - 6
-              </div>
-              <div className="border rounded-md text-center py-3 font-medium cursor-not-allowed bg-black/[0.1] opacity-50">
-                Uk - 6
-              </div>
+            <div id="sizesGrid" className="grid grid-cols-3 gap-2">
+              {p.size.data.map((item, i) => (
+                <div
+                  key={i}
+                  className={`border rounded-md text-center py-3 font-medium ${
+                    item.enabled
+                      ? "hover:border-black cursor-pointer"
+                      : "cursor-not-allowed bg-black/[0.1] opacity-50"
+                  } ${selectedSize === item.size ? "border-black" : ""}`}
+                  onClick={() => {
+                    setSelectedSize(item.size);
+                    setShowError(false);
+                  }}
+                >
+                  {item.size}
+                </div>
+              ))}
             </div>
             {/* Size End */}
 
             {/* Show Error Start */}
-            <div className="text-red-600 mt-1">size Selection is required</div>
+            {showError && (
+              <div className="text-red-600 mt-1">
+                size Selection is required
+              </div>
+            )}
             {/* product size range end */}
 
             {/* add to cart button start */}
-            <button className="w-full py-4 rounded-full bg-black text-white text-lg font-medium transition-transform active:scale-95 mb-3 hover:opicity-75">
+            <button
+              className="w-full py-4 mt-10 rounded-full bg-black text-white text-lg font-medium transition-transform active:scale-95 mb-3 hover:opicity-75"
+              onClick={() => {
+               if (!selectedSize){
+                setShowError(true);
+                document.getElementById("sizesGrid").scrollIntoView({
+                  block: "center",
+                  behavior: "smooth",
+                });
+              }else{
+                dispatch(addToCart({...product?.data?.[0],selectedSize,oneQuantityPrice:p.price,}))
+                nofify() 
+              }
+              }}
+            >
               {" "}
               Add to cart
             </button>
@@ -94,27 +142,46 @@ const Productdetails = () => {
             {/* Product details start */}
             <div className="text-lg font-bold mb-5 ">Product Details</div>
             <div className="text-md mb-5">
-              Lorem ipsum, dolor sit amet consectetur adipisicing elit. Fugit,
-              reprehenderit dolorem voluptatibus iure quis temporibus beatae
-              magnam tempora non adipisci totam, amet id modi sit hic quia quae
-              doloribus illum? Assumenda provident quae ex esse. Lorem ipsum
-              dolor sit amet consectetur, adipisicing elit. Dolore quod
-              architecto placeat possimus impedit aspernatur voluptatibus
-              quisquam eum recusandae. Facere ad, cupiditate, quod temporibus
-              reiciendis eaque aperiam debitis voluptate inventore, nulla
-              consequatur maxime nesciunt molestias? Officia, quidem quibusdam,
-              mollitia consequuntur culpa deleniti beatae ipsum alias quas esse
-              recusandae! Sit magni assumenda dolore quaerat! Enim, dolore?
+              {product?.data?.[0]?.attributes?.description}
             </div>
             {/* Product details End */}
           </div>
 
           {/* Right column End */}
         </div>
-        <RelatedProduct/>
+        <RelatedProduct products={products} />
       </Wrapper>
     </div>
   );
 };
-
 export default Productdetails;
+
+export async function getStaticPaths() {
+  const products = await fetchDataFromApi("/api/Products?populate=*");
+  const paths = products?.data?.map((p) => ({
+    params: {
+      slug: p.attributes.slug,
+    },
+  }));
+
+  return {
+    paths,
+    fallback: false,
+  };
+}
+
+export async function getStaticProps({ params: { slug } }) {
+  const product = await fetchDataFromApi(
+    `/api/Products?populate=*&filters[slug][$eq]=${slug}`
+  );
+  const products = await fetchDataFromApi(
+    `/api/Products?populate=*&[filters][slug][$ne]=${slug}`
+  );
+
+  return {
+    props: {
+      product,
+      products,
+    },
+  };
+}
